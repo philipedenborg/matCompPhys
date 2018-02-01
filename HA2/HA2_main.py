@@ -15,7 +15,7 @@ for k in range(4,30,2):
 			h = 0.18,	
 			kpts = (k,k,k),		# Number of k-points
 			xc = 'PBE',		# xc functional
-			txt = 'k_data.txt',	# Name of output file
+			txt = 'Al-%02d.txt' % k,	# Name of output file
 			eigensolver = 'rmm-diis')
 	atoms.set_calculator(calc)
 	if rank == 0:
