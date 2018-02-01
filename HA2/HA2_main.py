@@ -20,6 +20,6 @@ for k in range(4,30,2):
 	atoms.set_calculator(calc)
 	if rank == 0:
 		print k,atom.get.potential_energy()			
-	
+
 
 
