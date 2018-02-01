@@ -11,7 +11,7 @@ p = 0.10
 
 for k in range(4,30,2):
 	# create calculator			
-	calc = GPAW(mode = PW(500),	# Basis with Cut-off			
+	calc = GPAW(mode = fd,	# Basis with Cut-off			
 			h = 0.18,	
 			kpts = (k,k,k),		# Number of k-points
 			xc = 'PBE',		# xc functional
