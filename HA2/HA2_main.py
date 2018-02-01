@@ -1,17 +1,23 @@
 #!/usr/bin/env python
 from ase import Atoms
-from gpaw import GPAW
+from gpaw import GPAW, PW
 from ase.build import bulk
+import numpy as np
 
-atoms = bulk('Al')
+a0 = 4.05
+atoms = bulk('Al','fcc',a=a0)
+p = 0.10
 
-calc = GPAW(mode = PW(500),
-		h = 0.18,
-		kpts = (4,4,4),
-		xc = 'PBE',
-		txt = 'out.txt',
-		eigensolver = 'rmm-diis')  # create calculator
+for k in range(4,30,2):
+	# create calculator			
+	calc = GPAW(mode = PW(500),	# Basis with Cut-off			
+			h = 0.18,	
+			kpts = (k,k,k),		# Number of k-points
+			xc = 'PBE',		# xc functional
+			txt = 'k_data.txt',	# Name of output file
+			eigensolver = 'rmm-diis')
+	atoms.set_calculator(calc)		
+	print k,atom.get.potential_energy()			
+	
 
-atoms.set_calculator(calc)
-atom.get.potential_energy()
 
