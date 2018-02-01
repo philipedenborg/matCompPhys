@@ -2,6 +2,7 @@
 from ase import Atoms
 from gpaw import GPAW, PW
 from ase.build import bulk
+from ase.parallel import rank
 import numpy as np
 
 a0 = 4.05
@@ -16,8 +17,9 @@ for k in range(4,30,2):
 			xc = 'PBE',		# xc functional
 			txt = 'k_data.txt',	# Name of output file
 			eigensolver = 'rmm-diis')
-	atoms.set_calculator(calc)		
-	print k,atom.get.potential_energy()			
+	atoms.set_calculator(calc)
+	if rank == 0:
+		print k,atom.get.potential_energy()			
 	
 
 
