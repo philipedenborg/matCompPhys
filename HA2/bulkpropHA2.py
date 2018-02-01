@@ -33,14 +33,14 @@ for x in np.linspace(0.95, 1.05, 5):
     al.get_potential_energy()
     traj.write(al)
 
-configs = read('Ag.traj@0:5')  # read 5 configurations
+configs = read('Al.traj@0:5')  # read 5 configurations
 # Extract volumes and energies:
 volumes = [al.get_volume() for al in configs]
 energies = [al.get_potential_energy() for al in configs]
 eos = EquationOfState(volumes, energies)
 v0, e0, B = eos.fit()
 print(B / kJ * 1.0e24, 'GPa')
-eos.plot('Ag-eos.png')
+eos.plot('Al-eos.png')
 
 
 
