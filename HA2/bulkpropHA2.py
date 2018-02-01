@@ -11,9 +11,11 @@ from ase.units import kJ
 
 
 a0 = 4.0  # approximate lattice constant
-al = bulk('Al','fcc',a0)
-
-k = 10
+b=a0/2
+#al = bulk('Al','fcc',a0)
+al = atoms('Al',cell=[(0, b, b), (b, 0, b), (b, b, 0)],
+		pbc=1)
+k = 16
 
 # create calculator			
 calc = GPAW(mode = PW(500),	# Basis with Cut-off			
