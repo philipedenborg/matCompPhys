@@ -18,8 +18,7 @@ for k in range(4,30,2):
 			txt = 'Al-%02d.txt' % k,	# Name of output file
 			eigensolver = 'rmm-diis')
 	atoms.set_calculator(calc)
-	if rank == 0:
-		print "Die juden",atom.get.potential_energy()			
+	print atom.get.potential_energy()			
 
 
 
