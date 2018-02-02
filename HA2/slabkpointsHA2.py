@@ -19,7 +19,7 @@ for k in range(4,30,2):
 			txt = 'Al-slab1%02d.txt' % k,	# Name of output file
 			eigensolver = 'rmm-diis')
 	slab1.set_calculator(calc)
-	E = slab2.get_potential_energy()	
+	E = slab1.get_potential_energy()	
 	if rank == 0:	
 		print k,E	
 
