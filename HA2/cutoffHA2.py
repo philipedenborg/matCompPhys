@@ -9,12 +9,13 @@ from ase.units import kJ
 
 a0 = 4.05  # approximate lattice constant
 
-al = bulk('Al','fcc',a0)
+al = bulk('Al','fcc',a0) # Create bulk
 
-k = 16
+k = 16 # Number of k-points in every direction
 
-# create calculator
+# For different cut-off energies 
 for cf in np.linspace(400,1000,6):
+    # create calculator
     calc = GPAW(mode = PW(cf),	# Basis with Cut-off			
 		parallel={'band':1},	
 		kpts = (k,k,k),		# Number of k-points
@@ -24,5 +25,6 @@ for cf in np.linspace(400,1000,6):
 		eigensolver = 'rmm-diis')
     al.set_calculator(calc) # set calculator
     E =  al.get_potential_energy()
+
     if rank == 0:
-        print cf,E
+        print cf,E # Prints result from master node
