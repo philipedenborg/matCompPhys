@@ -37,7 +37,7 @@ calc2 = GPAW(mode='lcao',        # use the LCAO basis mode
             h=0.18,             # grid spacing
             xc='PBE',           # XC-functional
             #kpts=(16,16,16),    # k-point grid
-            txt='out.txt')      # name of GPAW output text file
+            txt='CO_gpaw.txt')      # name of GPAW output text file
 
 molecule = Atoms('CO', positions = pos )
 a = 8				# Size of molecule cell
