@@ -141,7 +141,9 @@ N = 1000;
 r = linspace(r_min,r_max,N+2);
 r = r(2:end-1)';
 
-
+A = 0.0311;
+B = -0.048;
+C = 
 
 % Calc Hartree potential
 phi=1/sqrt(pi)*exp(-r); % Hydrogen
