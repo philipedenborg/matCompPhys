@@ -1,20 +1,26 @@
 function V = calc_potHA3(phi,r)
-h = r(2) - r(1);
+% solves AU = b
+%
+%
+
+h = r(2) - r(1); % Stepping distance 
 N=length(r);
-n = 2*abs(phi).^2;
-UN = 1;
+n = abs(phi).^2; % Electron density
+UN = 0; % BC at r_max
 
 % A
 A = zeros(N,N);
 for i = 2:N-1
-   A(i,i) = -2/h^2;
-   A(i,i-1) = 1/h^2;
-   A(i,i+1) = 1/h^2;   
+   A(i,i) = -2;
+   A(i,i-1) = 1;
+   A(i,i+1) = 1;   
 end
-A(1,1) = -2/h^2;
-A(N,N) = -2/h^2;
-A(N,N-1) = 1/h^2;
-A(1,2) = 1/h^2;
+A(1,1) = -2;
+A(N,N) = -2;
+A(N,N-1) = 1;
+A(1,2) = 1;
+
+A = A/h^2;
 
 % b
 b = zeros(N,1);
@@ -22,7 +28,8 @@ for i = 1:N
    b(i) = -4*pi*r(i)*n(i);
 end
 b(N) = b(N) - UN/h^2;
-
-U = A\b;
-V = U./r;
+% Solve system of equations
+U_0 = A\b;
+U = U_0 + r/max(r);
+V = U./r;   % V_sH
 end
