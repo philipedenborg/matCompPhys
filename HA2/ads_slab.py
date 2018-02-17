@@ -55,4 +55,4 @@ dyn = QuasiNewton(slab, trajectory='AlCO.traj')
 dyn.run(fmax=0.05)
 
 if rank==0:	
-    print(surface,site,N,'Adsorption energy:', e_slab + e_CO - slab.get_potential_energy())
+    print(surface,site,N,'Adsorption energy:', slab.get_potential_energy() - e_slab - e_CO )
