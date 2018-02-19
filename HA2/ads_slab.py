@@ -5,6 +5,7 @@ from ase.constraints import FixAtoms
 from ase.optimize import QuasiNewton
 from ase.build import fcc111,fcc100, add_adsorbate
 from ase.parallel import rank
+from ase.visualize import view
 
 h = 1.85	# Off-set of adsorbate
 d = 1.16	# Bond length of adsorbate
@@ -14,7 +15,8 @@ vac = 10.0	# Vacuum
 
 surface = 100	# 100 or 111
 site = "ontop"  # ontop, bridge or hollow for 100 and ontop or bridge for 111 (fcc or hcp)
-pos = [(0., 0., 0.), (0., 0., d)] # Use to set orientation
+pos = [(0., 0., 0.), (0., 0., d)] # Use to set orientation (000, 000d) = carbon facing slab
+orientation = "C"  # Atom facing the slab, C or O.
 
 if surface == 100:
 	slab = fcc100('Al', size=(1, 1, N), vacuum=vac)
@@ -26,7 +28,7 @@ calc1 = GPAW(mode = PW(650),	# Basis with Cut-off
 			kpts = (k,k,1),		# Number of k-points
 			xc = 'PBE',
 			basis = 'dzp',		# xc functional
-			txt = 'ads-%d-%s-%d.txt' %(surface,site,N),	# Name of output file
+			txt = 'ads-%d-%s-%s-%d.txt' %(surface,site,orientation,N),	# Name of output file
 			eigensolver = 'rmm-diis')
 
 slab.set_calculator(calc1)
