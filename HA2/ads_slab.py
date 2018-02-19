@@ -27,6 +27,7 @@ calc1 = GPAW(mode = PW(650),	# Basis with Cut-off
 			parallel={'band':1},	
 			kpts = (k,k,1),		# Number of k-points
 			xc = 'PBE',
+			h = 0.18,
 			basis = 'dzp',		# xc functional
 			txt = 'ads-%d-%s-%s-%d.txt' %(surface,site,orientation,N),	# Name of output file
 			eigensolver = 'rmm-diis')
@@ -57,4 +58,4 @@ dyn = QuasiNewton(slab, trajectory='AlCO.traj')
 dyn.run(fmax=0.05)
 
 if rank==0:	
-    print(surface,site,N,'Adsorption energy:', slab.get_potential_energy() - e_slab - e_CO )
+    print(surface,site,N,orientation,'Adsorption energy:', slab.get_potential_energy() - e_slab - e_CO )
