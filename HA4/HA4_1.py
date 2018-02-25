@@ -33,7 +33,7 @@ def opt_func(params, atoms, weights, forces, E_0, a_0):
     eos = EquationOfState(v, e)
     V, E, B = eos.fit()
 
-  
+
     #Create lattice parameter fit for optimization function
     a = np.cbrt(V*4.0)
     F_l = weights[1]*(a - a_0)/(a_0)
@@ -59,9 +59,9 @@ forces = [atoms_90.get_forces(), atoms_100.get_forces(), atoms_110.get_forces()]
 params = [1000, 3, 5, 1] #eV, AA-1, AA, AA-1
 a_0 = 4.032
 E_0 = -3.36
-weights = [1, 1, 1] #Task 3
+weights = [1., 1., 1.] #Task 3
 
-fit = least_squares(fun = opt_func, x0 = params, args = (atoms, weights, forces, E_0, a_0), ftol = 1e-7)
+fit = least_squares(fun = opt_func, x0 = params, args = (atoms, weights, forces, E_0, a_0))
 
 print(fit)
 
