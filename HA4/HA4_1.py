@@ -15,31 +15,31 @@ def opt_func(params, atoms, weights, forces, E_0, a_0):
     F_f = []
     for atom,force in zip(atoms,forces):
         atom.set_calculator(calc)
-        F_i = np.array([weight[1]*(atom.get_forces()-force)/force]).flatten()
+        F_i = np.array([weights[0]*(atom.get_forces()-force)/force]).flatten()
         F_f.extend(F_i)
 
     #Initialize Al for energy and lattice fit    
-    al = bulk('Al', 'fcc', a = a_ref)
+    al = bulk('Al', 'fcc', a = a_0)
     al.set_calculator(calc)
     e = []
     v = []
     
     cell = al.get_cell()
-    for x in np.linspace(.8, 1.2, 10):
+    for x in np.linspace(.5, 1.5, 10):
         al.set_cell(cell*x, scale_atoms=True)
         e.append(al.get_potential_energy())
         v.append(al.get_volume())
 
-    eos = EquationOfStates(volumes, energies)
+    eos = EquationOfState(v, e)
     V, E, B = eos.fit()
 
   
     #Create lattice parameter fit for optimization function
     a = np.cbrt(V*4.0)
-    F_l = weight[2]*(a - a_0)/(a_0)
+    F_l = weights[1]*(a - a_0)/(a_0)
 
     #Create energy fit for optimization function
-    F_e  = weight[3]*(E-E_0)/(E_0)
+    F_e  = weights[2]*(E-E_0)/(E_0)
 
     #Full optimization function
     F = np.append(F_f,[F_l, F_e])
@@ -59,9 +59,9 @@ forces = [atoms_90.get_forces(), atoms_100.get_forces(), atoms_110.get_forces()]
 params = [1000, 3, 5, 1] #eV, AA-1, AA, AA-1
 a_0 = 4.032
 E_0 = -3.36
-w = [1, 1, 1] #Task 3
+weights = [1, 1, 1] #Task 3
 
-fit = least_squares(opt_func, params, (atoms, weights, forces, E_0, a_0), 1e-7)
+fit = least_squares(fun = opt_func, x0 = params, args = (atoms, weights, forces, E_0, a_0), ftol = 1e-7)
 
 print(fit)
 
