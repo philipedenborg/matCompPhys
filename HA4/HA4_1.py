@@ -82,17 +82,16 @@ forces = [atoms_90.get_forces(), atoms_100.get_forces(), atoms_110.get_forces()]
 params = [1000, 3, 5, 1] #eV, AA-1, AA, AA-1
 a_0 = 4.032
 E_0 = -3.36
-weights = [1., 100., 200.] #Task 3
-#'''
+weights = [1., 400., 200.] #Task 3
+'''
 fit = least_squares(fun = opt_func, x0 = params, args = (atoms, weights, forces, E_0, a_0)) #Activated when fit is needed
 
 file = open("fit_params.txt", "w") 
 for i in fit.x: 
     file.write("%f\n" % i) 
 file.close()
-#print(fit)
-#'''
-params = fit.x #[3436.87, 3.490, 4.387265, 0.86178] #fit if fitting is done #
+'''
+params = [1464.484362, 3.007881, 8.221412, 1.19702] # fit if fitting is done #
 
 a, E = check(params, forces, E_0, a_0)
 
