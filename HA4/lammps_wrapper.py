@@ -4,133 +4,189 @@
 from subprocess import call
 import os
 
-class Lammmps_setup():
+class Lammps():
     ''' 
     A Lammps setup that can be used to generate a Lammps file to be run on 
     Hebbe using mpi.
     '''
-
     def __init__(self):
 
-        # parameters are everything that is not a variable right now, was lazy 
-        # as usual.
-        self.parameters = {'dimension': '3',
-                           'boundary': 'p p p',
-                           'units': 'metal',
-                           'atom_style': 'atomic',
-                           'neighbor': '0.3 bin',
-                           'neigh_modify': 'every 10 delay 0 check no',
-                           'lattice': 'fcc ${a}',
-                           'region': 'box block 0 ${nx} 0 ${ny} 0 ${nz}',
-                           'create_box': '1 box',
-                           'create_atoms': '1 box',
-                           'velocity': 'all create ${T2} 1337',
-                           'mass': '1 26.9815',
-                           'pair_style': 'eam/alloy',
-                           'pair_coeff': '* * my_al_potential.alloy Al',
-                           'dump': 'id all atom 1000 atomsdump',
-                           'timestep': '0.001',
-                           'thermo_style': ('custom step temp etotal pe press'
-                                            'pxx pyy pzz lx ly lz'),
-                            'thermo': '100',
-                            'fix': ('1 all npt temp ${T} ${T}'
-                                    '1 iso 0 0 3 drag 1.0'),
-                            'run': '${eqsteps}'}
 
+        self.dimension = None
+        self.boundary = None
+        self.units = None
+
+        self.atom_style = None
+        self.neighbor = None
+        self.neigh_modify = None
         
-        # Variables are treated specialy
-        self.variables = {'eqsteps': '100000',
-                          'T': '600.0',
-                          'Tmelt': '2000.0',
-                          'nx': '6',
-                          'ny': '6',
-                          'nz': '6',
-                          'a': '4.05',
-                          'T2': '2*${T}'}
+        self.lattice = None
 
-        # The order that the file is constructed, basically which lines to  
-        # write in which order.
-        self.order = ['dimension', 
-                      'boundary', 
-                      'units', 
-                      'atom_style', 
-                      'neighbor', 
-                      'neigh_modify', 
-                      'eqsteps', 
-                      'T', 'Tmelt', 
-                      'nx', 'ny', 'nz', 'a', 
-                      'lattice', 
-                      'region', 
-                      'create_box', 
-                      'create_atoms', 
-                      'mass', 
-                      'pair_style', 
-                      'pair_coeff', 
-                      'T2', 
-                      'velocity', 
-                      'dump', 
-                      'timestep', 
-                      'thermo_style', 
-                      'thermo', 
-                      'fix', 
-                      'run']
+        self.region = None
+        
+        self.mass = None
+        
+        self.pair_style = None
+        self.pair_coeff = None
+        
+        self.velocity = None
+        
+        self.timestep = None
+        self.thermo_style = None
+        self.thermo = None
+        
+        self.groups = []
 
-    def set_parameter(self, key, val):
-        '''
-        Sets a parameter with the string name 'key' to have the value 'val'
-        '''
-        if not isinstance(key, str):
-            raise ValueError('Dict key \'{0}\' is not a string!'.format(key))
+        self.commands = []
 
-        self.parameters[key] = val
 
-    def set_variable(self, key, val):
-        '''
-        Sets a variable with the string name 'key' to have the value 'val'
-        '''
-        if not isinstance(key, str):
-            raise ValueError('Dict key \'{0}\' is not a string!'.format(key))
+    def set_boundary(self, bc):
+        self.boundary = bc
+        cmd_str = 'boundary \t{0} {1} {2}'.format(bc[0], bc[1], bc[2])
+        self.commands.append(cmd_str)
 
-        self.variables[key] = val
+    def set_dimension(self, dim):
+        self.dimension = dim
+        cmd_str = 'dimension \t{}'.format(dim)
+        self.commands.append(cmd_str)
 
-    def set_order(self, order):
-        '''
-        Sets the order in which the file will be written
-        '''
-        self.order = order
+    def set_units(self, u):
+        self.units = u
+        cmd_str = 'units \t{0}'.format(u)
+        self.commands.append(cmd_str)
 
-    def param_str(self, key):
-        '''
-        Creates the string representation of a parameter that is a correct 
-        command in Lammps.
-        '''
-        s = '{0} \t{1}\n'.format(key, self.parameters[key])
-        return s
+    def set_atom_style(self, style):
+        self.atom_style = style
+        cmd_str = 'atom_style \t{0}'.format(style)
+        self.commands.append(cmd_str)
 
-    def var_str(self, key):
-        '''
-        Creates the string representation of a variable that is a correct 
-        command in Lammps.
-        '''
-        s = 'variable \t{0} equal {1}\n'.format(key, self.variables[key])
-        return s
+    def set_neighbor(self, skin, style):
+        self.neighbor = (skin, style)
+        cmd_str = 'neighbor \t{0} {1}'.format(skin, style)
+        self.commands.append(cmd_str)
+
+    def set_neigh_modify(self, keyval):
+        self.neigh_modify = keyval
+        cmd_str = 'neigh_modify \t' + ' '.join(['{0} {1}'.format(key, val) 
+                                           for key, val in keyval.items()])
+        self.commands.append(cmd_str)
+
+    def set_lattice(self, style, scale):
+        self.lattice = (style, scale)
+        cmd_str = 'lattice \t{} {}'.format(style, scale)
+        self.commands.append(cmd_str)
+
+    def set_mass(self, atom_type, m):
+        self.mass = (atom_type, m)
+        cmd_str = 'mass \t{0} {1}'.format(atom_type, m)
+        self.commands.append(cmd_str)
+
+    def set_velocity(self, group_id, style, args='', keywords='', 
+                     value=''):
+        self.velocity = (group_id, style, args, keywords, value)
+        args_str = ' '.join([str(a) for a in args])
+        cmd_str = 'velocity \t{0} {1} {2} {3} {4}'.format(group_id, style, args_str, keywords, value)
+        self.commands.append(cmd_str)
+
+    def set_timestep(self, ts):
+        self.timestep = ts
+        cmd_str = 'timestep \t{0}'.format(ts)
+        self.commands.append(cmd_str)
+
+    def set_thermo_style(self, 
+            style='custom step temp etotal pe press pxx pyy pzz lx ly lz'):
+        self.thermo_style = style
+        cmd_str = 'thermo_style \t{0}'.format(style)
+        self.commands.append(cmd_str)
+
+    def set_thermo(self, th):
+        self.thermo = th
+        cmd_str = 'thermo \t{0}'.format(th)
+        self.commands.append(cmd_str)
+
+    def set_region(self, id='region_id', style='block', 
+                   dim=[(0,3), (0,3), (0,3)]):
+        self.region = [id, style, dim]
+        dims = dim[0] + dim[1] + dim[2]
+        dim_str = ' '.join([str(a) for a in dims])
+        cmd_str = 'region \t{0} {1} {2}'.format(id, style, dim_str)
+        self.commands.append(cmd_str)
+
+    def create_box(self, N, box_id):
+        if not self.region:
+            raise ValueError('Needs region!!!!!!')
+            
+        cmd_str = 'create_box \t{} {}'.format(N, box_id)
+        self.commands.append(cmd_str)
+
+    def create_atoms(self, atom_type, style):
+        if not self.region:
+            raise ValueError('Needs region!!!!!!')
+            
+        cmd_str = 'create_atoms \t{} {}'.format(atom_type, style)
+        self.commands.append(cmd_str)
+
+    def set_pair_style(self, ps):
+        self.pair_style = ps
+        cmd_str = 'pair_style \t{}'.format(ps)
+        self.commands.append(cmd_str)
+
+    def set_pair_coeff(self, pc):
+        self.pair_coeff = pc
+        cmd_str = 'pair_coeff \t * * {}'.format(pc)
+        self.commands.append(cmd_str)
+
+    def dump(self, dump_str='id all atom 1000 atomsdump'):
+        cmd_str = 'dump \tdump_str'
+        self.commands.append(cmd_str)
+
+    def fix(self, id, group_id, style, args):
+        args_str = ' '.join([str(a) for a in args])
+        cmd_str = 'fix \t{0} {1} {2} {3}'.format(id, group_id, style, args_str)
+        self.commands.append(cmd_str)
+    
+    def unfix(self, id):
+        cmd_str = 'unfix \t{0}'.format(id)
+        self.commands.append(cmd_str)
+
+    def run(self, steps):
+        cmd_str = 'run \t{0}'.format(steps)
+        self.commands.append(cmd_str)
+
+    def group(self, id, style, args):
+        self.groups.append((id, style, args))
+        args_str = ' '.join([str(a) for a in args])
+        cmd_str = 'group \t{0} {1} {2}'.format(id, style, args_str)
+        self.commands.append(cmd_str)
+
+    def gen_from_lmp_file(self, lmp_file):
+        file_commands = []
+
+        with open(self, lmp_file) as lmp:
+            for line in lmp:
+                cmds = line.split()
+                if '#' in cmds[0]:
+                    continue
+                else:
+                    cmd_str = cmds[0]
+                    for cmd in cmds[1:]:
+                        if '#' in cmd:
+                            break
+                        else:
+                            cmd_str += cmd
+
+                file_commands.append(cmd_str)
+
+        self.commands = file_commands
 
     def gen_lmp_file(self, filename):
         '''
         Creates a Lammps file from the setup variables.
         '''
-        p = self.parameters
-        v = self.variables
         with open(filename, 'w') as lmp_file:
-            for action in self.order:
-                if action in p:
-                    lmp_file.write(self.param_str(action))
-                elif action in v:
-                    lmp_file.write(self.var_str(action))
-                else:
-                    err_msg = ('The action \'{}\' is not defined!'
-                                .format(action))
-                    raise ValueError(err_msg)
+            for cmd in self.commands:
+                lmp_file.write(cmd)
+                lmp_file.write('\n')
 
 def run_lammps(lmp_file, actually_run=True):
     '''

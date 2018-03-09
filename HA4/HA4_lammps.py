@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
+from __future__ import division
 import numpy as np 
 import matplotlib.pyplot as plt
 import lammps_wrapper as lmp
@@ -8,11 +9,68 @@ from pprint import pprint
 
 print('Starting...')
 
-# Creates a setup for Lammps, used to generate a runnable Lammps file
-setup = lmp.Lammmps_setup()
+eqsteps = 50000
+simsteps = 200000
+T = 1100.0
+T2 = 2*T
+Tmelt = 2000.0
+nx = ny = 4
+nz = 20
+nzhalf = nz/2
+a = 4.05
+length = nz*a
+mass = 26.9815
 
-# Generate the Lammps file
-setup.gen_lmp_file('test.in')
+lammps = lmp.Lammps()
+
+lammps.set_dimension(3)
+lammps.set_boundary(('p','p','p'))
+lammps.set_units('metal')
+lammps.set_atom_style('atomic')
+lammps.set_neighbor(0.3, 'bin')
+lammps.set_neigh_modify({'every': 10, 'delay': 0, 'check': 'no'})
+
+lammps.set_lattice('bcc', 4.05)
+lammps.set_region('box', 'block', [(0,nx), (0,ny), (0,nz)])
+lammps.create_box(1, 'box')
+lammps.create_atoms(1, 'box')
+
+lammps.set_mass(1, mass)
+lammps.set_pair_style('eam/alloy')
+lammps.set_pair_coeff('Fe_potential.alloy Fe')
+
+lammps.set_velocity('all', 'create', args=(T2, 1337))
+
+lammps.dump('id all atom 1000 atomsdump')
+
+lammps.set_timestep(0.0001)
+lammps.set_thermo_style('custom step temp etotal pe press pxx pyy pzz lx ly lz')
+lammps.set_thermo(100)
+
+lammps.fix(1, 'all', 'npt', ['temp', T, T, 1, 'iso', 0, 0, 3, 'drag', 1.0])
+lammps.run(eqsteps)
+lammps.unfix(1)
+
+lammps.set_region('liquid', style='block', 
+                  dim=[('INF','INF'),('INF','INF'),('INF','INF')])
+lammps.group('liquid_group', 'region', 'region')
+
+lammps.fix(2, 'liquid_group', 'npt', 
+           ['temp', Tmelt, Tmelt, 1, 'z', 0, 0, 10, 'drag', 1.0])
+lammps.run(eqsteps)
+lammps.unfix(2)
+
+lammps.fix(3, 'liquid_group', 'npt', 
+           ['temp', T, T, 1, 'z', 0, 0, 10, 'drag', 10.0])
+lammps.run(eqsteps)
+lammps.unfix(3)
+
+lammps.fix(4, 'all', 'nph', 
+        ['x', 0, 0, 10, 'y', 0, 0, 10, 'z', 0, 0, 1, 'couple', 'xy', 'drag', 1.0])
+lammps.run(simsteps)
+lammps.unfix(4)
+
+lammps.gen_lmp_file('test.in')
 
 # Run the Lammps file
 lmp.run_lammps('test.in', actually_run=False)
