@@ -1,0 +1,51 @@
+
+dimension       3
+boundary        p p p
+units           metal
+
+atom_style	atomic
+neighbor	0.3 bin
+neigh_modify	every 10 delay 0 check no
+
+# Number of steps for the equilibration steps
+variable        eqsteps equal 100000
+
+
+# Some high temperature to melt the crystal
+variable	Tmelt equal 2000.0
+
+
+#System size
+variable	nx equal 10
+variable	ny equal 10
+variable	nz equal 10
+variable	a equal 4.05
+
+lattice		fcc ${a}
+
+region         box block 0 ${nx} 0 ${ny} 0 ${nz}
+create_box     1 box
+create_atoms   1 box
+
+mass		1 26.9815
+
+pair_style	eam/alloy
+pair_coeff	* * my_al_potential.alloy Al
+
+variable	T2 equal 2*${T}
+velocity	all create ${T2} 1337
+
+# Create a dump file. This can be visualized with
+# e.g. OVITO (http://www.ovito.org/)
+dump		id all atom 1000 atomsdump
+
+# 1 fs timestep
+timestep	0.001
+thermo_style	custom step temp etotal pe press pxx pyy pzz lx ly lz
+
+# output every 100th timestep
+thermo		100
+
+# Equilibration the whole system to the target temperature
+fix		1 all npt temp ${T} ${T} 1 iso 0 0 3 drag 1.0
+run		${eqsteps}
