@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#SBATCH -o melting.lammps
+#SBATCH -p hebbe
+#SBATCH -A SNIC2017-1-649
+#SBATCH -J LAMMPS
+#SBATCH -N 1
+#SBATCH -n 10
+#SBATCH -t 04:00:00
+#SBATCH -e stderr
+
+module purge
+module load intel/2017b
+
+mpirun ./lmp_mpi -in melting_WM.in
