@@ -1,0 +1,32 @@
+dimension    3
+boundary     p p p
+units        metal
+atom_style   atomic
+neighbor     0.3 bin
+neigh_modify delay 0 every 10 check no
+lattice      fcc 4.05
+region       box block 0 4 0 4 0 20
+create_box   1 box
+create_atoms 1 box
+mass         1 26.9815
+pair_style   eam/alloy
+pair_coeff   * * my_al_potential.alloy Al
+velocity     all create 2600 1337
+timestep     0.001
+thermo_style custom step temp etotal pe press pxx pyy pzz lx ly lz
+thermo       100
+fix          1 all npt temp 1300 1300 1 iso 0 0 3 drag 1.0
+run          50000
+unfix        1
+region       liquid block INF INF INF INF INF 10
+group        liquid_group region liquid
+fix          2 liquid_group npt temp 1700.0 1700.0 1 z 0 0 10 drag 1.0
+run          50000
+unfix        2
+fix          3 liquid_group npt temp 1300 1300 1 z 0 0 10 drag 10.0
+run          50000
+unfix        3
+dump         id all atom 1000 atomsdump_1300
+fix          4 all nph x 0 0 10 y 0 0 10 z 0 0 1 couple xy drag 1.0
+run          200000
+unfix        4

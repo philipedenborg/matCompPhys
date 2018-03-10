@@ -104,12 +104,12 @@ class Lammps():
         cmd_str = 'thermo \t{0}'.format(th)
         self.commands.append(cmd_str)
 
-    def set_region(self, id='region_id', style='block', 
+    def set_region(self, region_id, style='block', 
                    dim=[(0,3), (0,3), (0,3)]):
-        self.region = [id, style, dim]
+        self.region = [region_id, style, dim]
         dims = dim[0] + dim[1] + dim[2]
         dim_str = ' '.join([str(a) for a in dims])
-        cmd_str = 'region \t{0} {1} {2}'.format(id, style, dim_str)
+        cmd_str = 'region \t{0} {1} {2}'.format(region_id, style, dim_str)
         self.commands.append(cmd_str)
 
     def create_box(self, N, box_id):
@@ -136,30 +136,36 @@ class Lammps():
         cmd_str = 'pair_coeff \t * * {}'.format(pc)
         self.commands.append(cmd_str)
 
+    def log(self, log_file='log.lammps'):
+        self.log_name(log_file)
+        cmd_str = 'log \t{}'.format(log_file)
+        self.commands.append(cmd_str)
+
     def dump(self, dump_str='id all atom 1000 atomsdump'):
         cmd_str = 'dump \t{0}'.format(dump_str)
         self.commands.append(cmd_str)
 
-    def fix(self, id, group_id, style, args):
+    def fix(self, fix_id, group_id, style, args):
         args_str = ' '.join([str(a) for a in args])
-        cmd_str = 'fix \t{0} {1} {2} {3}'.format(id, group_id, style, args_str)
+        cmd_str = 'fix \t{0} {1} {2} {3}'.format(fix_id, group_id, style, args_str)
         self.commands.append(cmd_str)
     
-    def unfix(self, id):
-        cmd_str = 'unfix \t{0}'.format(id)
+    def unfix(self, fix_id):
+        cmd_str = 'unfix \t{0}'.format(fix_id)
         self.commands.append(cmd_str)
 
     def run(self, steps):
         cmd_str = 'run \t{0}'.format(steps)
         self.commands.append(cmd_str)
 
-    def group(self, id, style, args):
-        self.groups.append((id, style, args))
+    def group(self, group_id, style, args):
+
+        self.groups.append((group_id, style, args))
         if isinstance(args, (list, tuple)):
             args_str = ' '.join([str(a) for a in args])
         elif isinstance(args, str):
             args_str = args
-        cmd_str = 'group \t{0} {1} {2}'.format(id, style, args_str)
+        cmd_str = 'group \t{0} {1} {2}'.format(group_id, style, args_str)
         self.commands.append(cmd_str)
 
     def gen_from_lmp_file(self, lmp_file):
@@ -182,14 +188,31 @@ class Lammps():
 
         self.commands = file_commands
 
-    def gen_lmp_file(self, filename):
+    def gen_lmp_file(self, filename, align=True):
         '''
         Creates a Lammps file from the setup variables.
         '''
+
+        # Align all rows neatly
+        left_str = []
+        left_align = 0
+        if align:
+            for line in self.commands:
+                left_str.append(line.split()[0])
+            left_align = max([len(s) for s in left_str])
+
         with open(filename, 'w') as lmp_file:
             for cmd in self.commands:
-                lmp_file.write(cmd)
-                lmp_file.write('\n')
+                if align:
+                    cmd_split = cmd.split()
+                    left_cmd = cmd_split[0]
+                    padding = left_align - len(left_cmd)
+                    left_cmd += ' '*padding
+                    cmd_split[0] = left_cmd
+                    cmd_str = ' '.join(cmd_split)
+                    lmp_file.write(cmd_str + '\n')
+                else:
+                    lmp_file.write(cmd + '\n')
 
 def run_lammps(lmp_file, actually_run=True):
     '''
