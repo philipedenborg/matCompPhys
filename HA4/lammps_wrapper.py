@@ -137,7 +137,7 @@ class Lammps():
         self.commands.append(cmd_str)
 
     def dump(self, dump_str='id all atom 1000 atomsdump'):
-        cmd_str = 'dump \tdump_str'
+        cmd_str = 'dump \t{0}'.format(dump_str)
         self.commands.append(cmd_str)
 
     def fix(self, id, group_id, style, args):
@@ -155,7 +155,10 @@ class Lammps():
 
     def group(self, id, style, args):
         self.groups.append((id, style, args))
-        args_str = ' '.join([str(a) for a in args])
+        if isinstance(args, (list, tuple)):
+            args_str = ' '.join([str(a) for a in args])
+        elif isinstance(args, str):
+            args_str = args
         cmd_str = 'group \t{0} {1} {2}'.format(id, style, args_str)
         self.commands.append(cmd_str)
 
@@ -196,12 +199,12 @@ def run_lammps(lmp_file, actually_run=True):
     and a string will be printed to stdout instead.
     '''
     if not os.path.isfile(lmp_file):
-        raise FileNotFoundError('File \'{0}\' could not be found.'
+        raise FileError('File \'{0}\' could not be found.'
                                 .format(lmp_file))
     # Remove the comment below to actually run the program, this part has not 
     # been tested yet though...
     if actually_run:
-        call(['mpirun', 'lmp_mpi', '-in', lmp_file])
+        call(['mpirun', './lmp_mpi', '-in', lmp_file])
     else:
         print('In debug mode, not running Lammps.')
         
@@ -215,8 +218,10 @@ def read_log(log_file):
 
     # I'm lazy, so I will just split this string to see how many vaiables we 
     # have.
+    data_order = []
     for word in 'Step Temp TotEng PotEng Press Pxx Pyy Pzz Lx Ly Lz'.split():
         data_dict[word.lower()] = []
+        data_order.append(word.lower())
 
     in_data = False # Are we in the data we want to extract?
     total_lines = 0
@@ -238,7 +243,7 @@ def read_log(log_file):
             elif in_data:
                 data_lines += 1
                 values = line.split()
-                for val, key in zip(values, data_dict):
+                for val, key in zip(values, data_order):
                     data_dict[key].append(float(val))
                 
     print('Log was {0} lines long.'.format(total_lines))
